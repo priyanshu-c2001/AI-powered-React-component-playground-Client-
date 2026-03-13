@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { generateCode, updateSession } from '../redux/slices/sessionSlice';
 import { Paperclip, X } from 'lucide-react';

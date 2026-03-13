@@ -27,19 +27,10 @@ export const logoutUser = createAsyncThunk('auth/logout', async () => {
 // Thunk to restore authentication from cookie on page load
 export const restoreAuthFromCookie = createAsyncThunk('auth/restoreFromCookie', async (_, { rejectWithValue }) => {
     try {
-        // Try to fetch sessions - this requires authentication
-        // If the token cookie is valid, this will succeed and prove we're authenticated
-        const response = await api.get('/session');
-        // If we reach here, we're authenticated. Now we need to get user data
-        // We'll make a simple request that returns user info
-        // For now, we extract from localStorage or create a minimal user object
-        const userEmail = localStorage.getItem('userEmail');
-        if (userEmail) {
-            return { emailId: userEmail };
-        }
-        // If no email in storage, we could fetch it from a /me endpoint if it existed
-        // For now, we'll just mark as authenticated
-        return { emailId: 'User' };
+        // Try to fetch user data - this requires authentication
+        // If the token cookie is valid, this will succeed and return user data
+        const response = await api.get('/me');
+        return response.data.user;
     } catch (error) {
         return rejectWithValue('Not authenticated');
     }
@@ -65,10 +56,6 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.isAuthenticated = true;
                 state.user = action.payload;
-                // Store email in localStorage for persistence
-                if (action.payload.emailId) {
-                    localStorage.setItem('userEmail', action.payload.emailId);
-                }
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.loading = false;
@@ -77,7 +64,6 @@ const authSlice = createSlice({
             .addCase(logoutUser.fulfilled, (state) => {
                 state.user = null;
                 state.isAuthenticated = false;
-                localStorage.removeItem('userEmail');
             })
             .addCase(restoreAuthFromCookie.pending, (state) => {
                 state.loading = true;
@@ -92,7 +78,6 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.isAuthenticated = false;
                 state.authRestored = true;
-                localStorage.removeItem('userEmail');
             });
     },
 });
